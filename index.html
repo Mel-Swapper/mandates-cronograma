@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendário Mandates CSO - Completo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .nav-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .current-month {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #333;
+            margin: 0 20px;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .calendar-grid {
+            padding: 30px;
+        }
+
+        .month-calendar {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .month-calendar.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .month-title {
+            text-align: center;
+            font-size: 2em;
+            font-weight: 300;
+            color: #333;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            margin-bottom: 1px;
+        }
+
+        .weekday {
+            background: #6c757d;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #dee2e6;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .day {
+            background: white;
+            padding: 12px 6px;
+            min-height: 140px;
+            position: relative;
+            border: none;
+            transition: all 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .day:hover {
+            background: #f8f9fa;
+            transform: scale(1.02);
+        }
+
+        .day.weekend {
+            background: #fff3cd;
+        }
+
+        .day.weekend:hover {
+            background: #ffeaa7;
+        }
+
+        .day.other-month {
+            background: #f8f9fa;
+            color: #adb5bd;
+        }
+
+        .day-number {
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-bottom: 6px;
+            color: #333;
+        }
+
+        .day.weekend .day-number {
+            color: #e67e22;
+        }
+
+        .event {
+            color: white;
+            padding: 3px 6px;
+            margin: 2px 0;
+            border-radius: 6px;
+            font-size: 0.65em;
+            font-weight: 500;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            line-height: 1.2;
+        }
+
+        .event:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .event.comunicacao {
+            background: linear-gradient(135deg, #007bff, #6610f2);
+        }
+
+        .event.lembrete {
+            background: linear-gradient(135deg, #fd7e14, #e83e8c);
+        }
+
+        .event.janela {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .event.coleta {
+            background: linear-gradient(135deg, #ffc107, #ff8c00);
+            color: #333;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            font-size: 0.9em;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+
+        .legend-color.comunicacao {
+            background: linear-gradient(135deg, #007bff, #6610f2);
+        }
+
+        .legend-color.lembrete {
+            background: linear-gradient(135deg, #fd7e14, #e83e8c);
+        }
+
+        .legend-color.janela {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .legend-color.coleta {
+            background: linear-gradient(135deg, #ffc107, #ff8c00);
+        }
+
+        .legend-color.weekend {
+            background: #e67e22;
+        }
+
+        .print-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .print-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(40, 167, 69, 0.4);
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+            
+            .navigation, .print-btn {
+                display: none;
+            }
+            
+            .month-calendar {
+                display: block !important;
+                page-break-after: always;
+            }
+            
+            .month-calendar:last-child {
+                page-break-after: avoid;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navigation {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .current-month {
+                margin: 0;
+            }
+            
+            .legend {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .day {
+                min-height: 100px;
+                padding: 6px 4px;
+            }
+            
+            .event {
+                font-size: 0.6em;
+                padding: 2px 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Calendário Mandates CSO</h1>
+            <p>Cronograma Completo - Julho 2025 a Abril 2026</p>
+        </div>
+
+        <div class="navigation">
+            <button class="nav-btn" onclick="previousMonth()" id="prevBtn">← Anterior</button>
+            <div class="current-month" id="currentMonthDisplay">Julho 2025</div>
+            <button class="nav-btn" onclick="nextMonth()" id="nextBtn">Próximo →</button>
+        </div>
+
+        <div class="calendar-grid" id="calendarGrid">
+            <!-- Os calendários serão gerados aqui -->
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color comunicacao"></div>
+                <span>Envio Comunicação</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color lembrete"></div>
+                <span>Envio Lembrete</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color janela"></div>
+                <span>Janela Solicitação</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color coleta"></div>
+                <span>Coleta Insumos</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color weekend"></div>
+                <span>Fins de Semana</span>
+            </div>
+        </div>
+    </div>
+
+    <button class="print-btn" onclick="window.print()">🖨️ Imprimir PDF</button>
+
+    <script>
+        const months = [
+            'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+        ];
+
+        const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+        // Eventos com datas corrigidas e organizadas por período
+        const events = [
+            // 3T2025 (Jul-Set 2025)
+            { start: '2025-07-14', end: '2025-07-25', type: 'janela', title: 'Janela Solicitação 3T2025' },
+            { start: '2025-07-14', end: '2025-08-01', type: 'coleta', title: 'Coleta Insumos 3T2025' },
+            { start: '2025-08-04', end: '2025-08-08', type: 'comunicacao', title: 'Envio Comunicação 3T2025' },
+            { start: '2025-08-18', end: '2025-08-22', type: 'lembrete', title: 'Envio Lembrete 3T2025' },
+            { start: '2025-09-01', end: '2025-09-05', type: 'comunicacao', title: 'Envio Comunicação 3T2025' },
+            { start: '2025-09-15', end: '2025-09-19', type: 'lembrete', title: 'Envio Lembrete 3T2025' },
+            
+            // 4T2025 (Out-Dez 2025)
+            { start: '2025-10-01', end: '2025-10-11', type: 'janela', title: 'Janela Solicitação 4T2025' },
+            { start: '2025-10-01', end: '2025-10-18', type: 'coleta', title: 'Coleta Insumos 4T2025' },
+            { start: '2025-10-21', end: '2025-10-25', type: 'comunicacao', title: 'Envio Comunicação 4T2025' },
+            { start: '2025-11-03', end: '2025-11-07', type: 'lembrete', title: 'Envio Lembrete 4T2025' },
+            { start: '2025-11-17', end: '2025-11-21', type: 'comunicacao', title: 'Envio Comunicação 4T2025' },
+            { start: '2025-12-01', end: '2025-12-05', type: 'lembrete', title: 'Envio Lembrete 4T2025' },
+            { start: '2025-12-15', end: '2025-12-19', type: 'comunicacao', title: 'Envio Comunicação 4T2025' },
+            
+            // 1T2026 (Jan-Mar 2026)
+            { start: '2026-01-02', end: '2026-01-13', type: 'janela', title: 'Janela Solicitação 1T2026' },
+            { start: '2026-01-02', end: '2026-01-20', type: 'coleta', title: 'Coleta Insumos 1T2026' },
+            { start: '2025-12-22', end: '2025-12-27', type: 'lembrete', title: 'Lembrete Antecipado 1T2026' },
+            { start: '2026-01-23', end: '2026-01-27', type: 'comunicacao', title: 'Envio Comunicação 1T2026' },
+            { start: '2026-02-03', end: '2026-02-07', type: 'lembrete', title: 'Envio Lembrete 1T2026' },
+            { start: '2026-02-17', end: '2026-02-21', type: 'comunicacao', title: 'Envio Comunicação 1T2026' },
+            { start: '2026-03-02', end: '2026-03-06', type: 'lembrete', title: 'Envio Lembrete 1T2026' },
+            { start: '2026-03-16', end: '2026-03-20', type: 'comunicacao', title: 'Envio Comunicação 1T2026' },
+            
+            // 2T2026 (Abr-Jun 2026) - apenas início do período
+            { start: '2026-04-01', end: '2026-04-11', type: 'janela', title: 'Janela Solicitação 2T2026' },
+            { start: '2026-04-01', end: '2026-04-18', type: 'coleta', title: 'Coleta Insumos 2T2026' },
+            { start: '2026-04-21', end: '2026-04-25', type: 'comunicacao', title: 'Envio Comunicação 2T2026' }
+        ];
+
+        let currentMonthIndex = 0;
+        const startDate = new Date(2025, 6, 1); // Julho 2025
+        const totalMonths = 10; // Julho 2025 até Abril 2026
+
+        function parseDate(dateStr) {
+            // Converte string YYYY-MM-DD para objeto Date
+            const [year, month, day] = dateStr.split('-').map(num => parseInt(num));
+            return new Date(year, month - 1, day); // month - 1 porque Date usa 0-11 para meses
+        }
+
+        function isDateInRange(date, startStr, endStr) {
+            const start = parseDate(startStr);
+            const end = parseDate(endStr);
+            
+            // Normaliza as datas para comparação (remove horário)
+            const checkDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            const startDate = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+            const endDate = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+            
+            return checkDate >= startDate && checkDate <= endDate;
+        }
+
+        function getEventsForDate(date) {
+            return events.filter(event => 
+                isDateInRange(date, event.start, event.end)
+            );
+        }
+
+        function isWeekend(date) {
+            const day = date.getDay();
+            return day === 0 || day === 6; // Domingo ou Sábado
+        }
+
+        function generateCalendar(year, month) {
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const firstDayOfWeek = firstDay.getDay();
+            const daysInMonth = lastDay.getDate();
+
+            const monthIndex = (year - startDate.getFullYear()) * 12 + month - startDate.getMonth();
+            const isActive = currentMonthIndex === monthIndex;
+
+            let html = `
+                <div class="month-calendar ${isActive ? 'active' : ''}">
+                    <div class="month-title">${months[month]} ${year}</div>
+                    <div class="weekdays">
+                        ${weekdays.map(day => `<div class="weekday">${day}</div>`).join('')}
+                    </div>
+                    <div class="days-grid">
+            `;
+
+            // Dias do mês anterior
+            const prevMonth = month === 0 ? 11 : month - 1;
+            const prevYear = month === 0 ? year - 1 : year;
+            const prevMonthLastDay = new Date(prevYear, prevMonth + 1, 0).getDate();
+            
+            for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+                const dayNum = prevMonthLastDay - i;
+                const date = new Date(prevYear, prevMonth, dayNum);
+                const dayEvents = getEventsForDate(date);
+                const weekendClass = isWeekend(date) ? 'weekend' : '';
+                
+                html += `
+                    <div class="day other-month ${weekendClass}">
+                        <div class="day-number">${dayNum}</div>
+                        ${dayEvents.map(event => `<div class="event ${event.type}">${event.title}</div>`).join('')}
+                    </div>
+                `;
+            }
+
+            // Dias do mês atual
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const dayEvents = getEventsForDate(date);
+                const weekendClass = isWeekend(date) ? 'weekend' : '';
+                
+                html += `
+                    <div class="day ${weekendClass}">
+                        <div class="day-number">${day}</div>
+                        ${dayEvents.map(event => `<div class="event ${event.type}">${event.title}</div>`).join('')}
+                    </div>
+                `;
+            }
+
+            // Dias do próximo mês para completar a grade
+            const totalCells = Math.ceil((firstDayOfWeek + daysInMonth) / 7) * 7;
+            const remainingCells = totalCells - (firstDayOfWeek + daysInMonth);
+            const nextMonth = month === 11 ? 0 : month + 1;
+            const nextYear = month === 11 ? year + 1 : year;
+
+            for (let day = 1; day <= remainingCells; day++) {
+                const date = new Date(nextYear, nextMonth, day);
+                const dayEvents = getEventsForDate(date);
+                const weekendClass = isWeekend(date) ? 'weekend' : '';
+                
+                html += `
+                    <div class="day other-month ${weekendClass}">
+                        <div class="day-number">${day}</div>
+                        ${dayEvents.map(event => `<div class="event ${event.type}">${event.title}</div>`).join('')}
+                    </div>
+                `;
+            }
+
+            html += `
+                    </div>
+                </div>
+            `;
+
+            return html;
+        }
+
+        function generateAllCalendars() {
+            let html = '';
+            let currentDate = new Date(startDate);
+            
+            for (let i = 0; i < totalMonths; i++) {
+                html += generateCalendar(currentDate.getFullYear(), currentDate.getMonth());
+                currentDate.setMonth(currentDate.getMonth() + 1);
+            }
+            
+            document.getElementById('calendarGrid').innerHTML = html;
+            updateCurrentMonthDisplay();
+            updateNavigationButtons();
+        }
+
+        function updateCurrentMonthDisplay() {
+            const displayDate = new Date(startDate);
+            displayDate.setMonth(displayDate.getMonth() + currentMonthIndex);
+            document.getElementById('currentMonthDisplay').textContent = 
+                `${months[displayDate.getMonth()]} ${displayDate.getFullYear()}`;
+        }
+
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            prevBtn.disabled = currentMonthIndex === 0;
+            nextBtn.disabled = currentMonthIndex === totalMonths - 1;
+        }
+
+        function previousMonth() {
+            if (currentMonthIndex > 0) {
+                document.querySelector('.month-calendar.active').classList.remove('active');
+                currentMonthIndex--;
+                document.querySelectorAll('.month-calendar')[currentMonthIndex].classList.add('active');
+                updateCurrentMonthDisplay();
+                updateNavigationButtons();
+            }
+        }
+
+        function nextMonth() {
+            if (currentMonthIndex < totalMonths - 1) {
+                document.querySelector('.month-calendar.active').classList.remove('active');
+                currentMonthIndex++;
+                document.querySelectorAll('.month-calendar')[currentMonthIndex].classList.add('active');
+                updateCurrentMonthDisplay();
+                updateNavigationButtons();
+            }
+        }
+
+        // Inicializar o calendário
+        generateAllCalendars();
+    </script>
+</body>
+</html>
